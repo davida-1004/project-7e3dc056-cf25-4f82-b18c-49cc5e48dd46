@@ -1,8 +1,13 @@
-import { useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  if (new URLSearchParams(location.search).get("trip")) {
+    return <Navigate to={`/results${location.search}`} replace />;
+  }
 
   return (
     <div className="mobile-container flex flex-col items-center justify-center min-h-screen px-6 relative overflow-hidden">

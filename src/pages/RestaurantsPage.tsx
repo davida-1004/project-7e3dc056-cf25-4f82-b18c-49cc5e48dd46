@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTrip } from "@/context/TripContext";
-import { getResultForRegion } from "@/data/tripResults";
+import { buildPersonalizedTripPlan } from "@/lib/personalizedTrip";
 import { ChevronLeft } from "lucide-react";
 
 const categories = ["전체", "아침", "점심", "저녁", "로맨틱", "현지 맛집"];
@@ -10,7 +10,7 @@ const RestaurantsPage = () => {
   const [filter, setFilter] = useState("전체");
   const navigate = useNavigate();
   const { answers } = useTrip();
-  const data = getResultForRegion(answers.region);
+  const data = buildPersonalizedTripPlan(answers);
 
   const filtered = filter === "전체"
     ? data.restaurants
@@ -22,7 +22,10 @@ const RestaurantsPage = () => {
         <button onClick={() => navigate("/results")} className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center">
           <ChevronLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-xl font-bold">🍽️ 이런 맛집 어때요?</h1>
+        <div>
+          <h1 className="text-xl font-bold">🍽️ 이런 맛집 어때요?</h1>
+          <p className="text-sm text-muted-foreground">{data.selectedCities.join(", ")} 기준 추천</p>
+        </div>
       </div>
 
       <div className="px-4 flex gap-2 overflow-x-auto pb-4">

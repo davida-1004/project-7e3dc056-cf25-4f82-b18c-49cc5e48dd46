@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useTrip } from "@/context/TripContext";
-import { getResultForRegion } from "@/data/tripResults";
+import { buildPersonalizedTripPlan } from "@/lib/personalizedTrip";
 import { ChevronLeft } from "lucide-react";
 
 const ToursPage = () => {
   const navigate = useNavigate();
   const { answers } = useTrip();
-  const data = getResultForRegion(answers.region);
+  const data = buildPersonalizedTripPlan(answers);
 
   return (
     <div className="mobile-container min-h-screen pb-8 bg-background">
@@ -14,7 +14,10 @@ const ToursPage = () => {
         <button onClick={() => navigate("/results")} className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center">
           <ChevronLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-xl font-bold">🎒 현지 인기 투어</h1>
+        <div>
+          <h1 className="text-xl font-bold">🎒 현지 인기 투어</h1>
+          <p className="text-sm text-muted-foreground">{data.selectedCountries.join(", ")} 루트 기준</p>
+        </div>
       </div>
 
       <div className="px-4 space-y-4">

@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTrip } from "@/context/TripContext";
-import { getResultForRegion } from "@/data/tripResults";
+import { getRegionMeta } from "@/data/tripResults";
+import { buildPersonalizedTripPlan } from "@/lib/personalizedTrip";
+import RouteMap from "@/components/RouteMap";
 import ShareSheet from "@/components/ShareSheet";
 
 const ResultsPage = () => {
@@ -9,13 +11,20 @@ const ResultsPage = () => {
   const { answers } = useTrip();
   const [showShare, setShowShare] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
-  const [mapError, setMapError] = useState(false);
 
-  const data = getResultForRegion(answers.region);
+  const data = buildPersonalizedTripPlan(answers);
+  const regionMeta = getRegionMeta(answers.region || "🇪🇺 유럽");
+  const routeQuery = encodeURIComponent(data.routePoints.map((point) => `${point.city} ${point.country}`).join(" -> "));
+  const visibleDay = data.days[selectedDay] || data.days[0];
 
-  // Show custom info if user typed custom values
-  const displayDuration = answers.customDuration || data.duration;
-  const displayRegion = answers.customRegion ? `${answers.customRegion} 여행` : null;
+  useEffect(() => {
+    if (selectedDay >= data.days.length) {
+      setSelectedDay(0);
+    }
+  }, [data.days.length, selectedDay]);
+
+  const displayDuration = data.duration;
+  const displayDestination = data.destination;
 
   return (
     <div className="mobile-container min-h-screen pb-32 bg-background">
@@ -23,21 +32,36 @@ const ResultsPage = () => {
       <div className="mx-4 mt-6 p-6 rounded-3xl bg-primary/10 border border-primary/20">
         <div className="text-3xl mb-2">{data.flag}</div>
         <h1 className="text-2xl font-bold text-foreground mb-2">
-          {displayRegion || data.destination}
+          {displayDestination}
         </h1>
         <div className="flex gap-4 text-sm text-muted-foreground">
           <span>📅 {displayDuration}</span>
           <span>💰 {data.budget}</span>
         </div>
-        {answers.customRegion && (
-          <p className="text-xs text-muted-foreground mt-2">
-            * &quot;{answers.customRegion}&quot; 기준 추천 일정입니다
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground mt-3">
+          신혼부부 인기 코스: {regionMeta.honeymoonCourse}
+        </p>
+        <p className="text-xs text-muted-foreground mt-2">{data.summaryNote}</p>
       </div>
 
       {/* Section B — Info Chips */}
       <div className="px-4 mt-6">
+        {(data.selectedCountries.length > 0 || data.selectedCities.length > 0) && (
+          <div className="mb-3 rounded-2xl bg-card border border-border p-4 space-y-2">
+            {data.selectedCountries.length > 0 && (
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">선택한 나라</span>
+                <span className="text-muted-foreground"> {data.selectedCountries.join(", ")}</span>
+              </p>
+            )}
+            {data.selectedCities.length > 0 && (
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">선택한 도시 코스</span>
+                <span className="text-muted-foreground"> {data.selectedCities.join(", ")}</span>
+              </p>
+            )}
+          </div>
+        )}
         <div className="flex flex-wrap gap-2">
           {data.info.map((item, i) => (
             <div key={i} className="px-3 py-2 rounded-xl bg-card border border-border text-sm">
@@ -51,24 +75,17 @@ const ResultsPage = () => {
       {/* Section C — Map */}
       <div className="px-4 mt-6">
         <h2 className="text-lg font-bold text-foreground mb-3">🗺️ 여행 동선</h2>
-        {mapError ? (
-          <div className="rounded-2xl bg-muted p-8 text-center">
-            <p className="text-muted-foreground">지도를 불러오지 못했어요. 새로고침 해주세요 🙏</p>
-          </div>
-        ) : (
-          <div className="rounded-2xl overflow-hidden border border-border">
-            <iframe
-              title="여행 지도"
-              width="100%"
-              height="250"
-              style={{ border: 0 }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              src={`https://www.google.com/maps/embed/v1/view?key=placeholder&center=${data.mapCenter.lat},${data.mapCenter.lng}&zoom=10`}
-              onError={() => setMapError(true)}
-            />
-          </div>
-        )}
+        <RouteMap points={data.routePoints} />
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${routeQuery}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40"
+          >
+            전체 루트 지도에서 보기
+          </a>
+        </div>
         <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
           {data.days.map((d, i) => (
             <button
@@ -89,26 +106,24 @@ const ResultsPage = () => {
       {/* Section D — Timeline */}
       <div className="px-4 mt-6">
         <h2 className="text-lg font-bold text-foreground mb-4">📋 일정 타임라인</h2>
-        {data.days.map((day) => (
-          <div key={day.day} className="mb-6">
-            <h3 className="text-base font-semibold text-primary mb-3">Day {day.day}</h3>
-            <div className="relative pl-6 border-l-2 border-primary/20 space-y-4">
-              {day.slots.map((slot, si) => (
-                <div key={si} className="relative">
-                  <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-primary" />
-                  <div className="bg-card border border-border rounded-2xl p-4">
-                    <div className="text-xs text-muted-foreground font-medium mb-1">{slot.time}</div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xl">{slot.emoji}</span>
-                      <span className="font-semibold text-foreground">{slot.place}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{slot.desc}</p>
+        <div key={visibleDay.day} className="mb-6">
+          <h3 className="text-base font-semibold text-primary mb-3">Day {visibleDay.day}</h3>
+          <div className="relative pl-6 border-l-2 border-primary/20 space-y-4">
+            {visibleDay.slots.map((slot, si) => (
+              <div key={si} className="relative">
+                <div className="absolute -left-[25px] w-3 h-3 rounded-full bg-primary" />
+                <div className="bg-card border border-border rounded-2xl p-4">
+                  <div className="text-xs text-muted-foreground font-medium mb-1">{slot.time}</div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xl">{slot.emoji}</span>
+                    <span className="font-semibold text-foreground">{slot.place}</span>
                   </div>
+                  <p className="text-sm text-muted-foreground">{slot.desc}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Section E — Transport Tip */}

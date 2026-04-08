@@ -1,14 +1,37 @@
 import { toast } from "sonner";
 import { X } from "lucide-react";
+import { useTrip } from "@/context/TripContext";
+import { buildShareText, buildShareUrl } from "@/lib/personalizedTrip";
 
 interface ShareSheetProps {
   onClose: () => void;
 }
 
 const ShareSheet = ({ onClose }: ShareSheetProps) => {
+  const { answers } = useTrip();
+  const shareUrl = buildShareUrl(answers);
+  const shareText = buildShareText(answers);
+
   const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success("복사됐어요! ✅");
+    navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+    toast.success("여행 요약과 링크를 함께 복사했어요! ✅");
+  };
+
+  const handleWebShare = async () => {
+    if (!navigator.share) {
+      toast("이 기기에서는 시스템 공유가 지원되지 않아요. 링크 복사를 사용해주세요.");
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: "허니문 여행 플랜",
+        text: shareText,
+        url: shareUrl,
+      });
+    } catch {
+      toast("공유를 취소했거나 지금은 열 수 없어요.");
+    }
   };
 
   return (
@@ -28,13 +51,17 @@ const ShareSheet = ({ onClose }: ShareSheetProps) => {
 
         <h2 className="text-xl font-bold text-foreground mb-6">친구나 파트너에게 공유해요 💌</h2>
 
+        <div className="rounded-2xl border border-border bg-muted/40 p-4 mb-4">
+          <p className="text-sm whitespace-pre-line text-foreground leading-relaxed">{shareText}</p>
+        </div>
+
         <div className="space-y-3">
           <button
-            onClick={() => toast("카카오톡 공유 기능은 준비 중이에요!")}
+            onClick={handleWebShare}
             className="w-full h-14 rounded-2xl font-semibold text-lg transition-opacity hover:opacity-90"
             style={{ backgroundColor: "#FEE500", color: "#191919" }}
           >
-            카카오톡으로 공유
+            시스템 공유 열기
           </button>
           <button
             onClick={copyLink}
@@ -45,7 +72,7 @@ const ShareSheet = ({ onClose }: ShareSheetProps) => {
         </div>
 
         <p className="text-sm text-muted-foreground text-center mt-4">
-          로그인 없이도 링크로 바로 볼 수 있어요
+          링크만이 아니라 선택한 나라, 도시, 기간 요약도 같이 전달돼요
         </p>
       </div>
 

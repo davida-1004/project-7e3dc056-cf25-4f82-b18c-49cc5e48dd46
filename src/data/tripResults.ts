@@ -29,6 +29,71 @@ export interface TripResult {
   }[];
 }
 
+export interface CountryOption {
+  name: string;
+  emoji: string;
+  cities: string[];
+}
+
+export interface RegionOption {
+  honeymoonCourse: string;
+  countryAdvice: string;
+  countries: CountryOption[];
+}
+
+export const regionOptions: Record<string, RegionOption> = {
+  "🇪🇺 유럽": {
+    honeymoonCourse: "파리, 인터라켄, 루체른 코스로 많이 가요!",
+    countryAdvice: "1주면 2개국, 2주면 3~4개국까지 여유 있게 묶기 좋아요.",
+    countries: [
+      { name: "프랑스", emoji: "🇫🇷", cities: ["파리", "니스", "몽생미셸", "리옹"] },
+      { name: "스위스", emoji: "🇨🇭", cities: ["인터라켄", "루체른", "취리히", "체르마트"] },
+      { name: "이탈리아", emoji: "🇮🇹", cities: ["로마", "피렌체", "베네치아", "아말피"] },
+      { name: "오스트리아", emoji: "🇦🇹", cities: ["비엔나", "잘츠부르크", "할슈타트"] },
+      { name: "스페인", emoji: "🇪🇸", cities: ["바르셀로나", "세비야", "마드리드"] },
+    ],
+  },
+  "🌴 동남아": {
+    honeymoonCourse: "발리, 우붓, 누사페니다 조합이 특히 인기예요!",
+    countryAdvice: "휴양 중심이면 1~2개국, 투어를 넓히면 3개국도 충분히 가능해요.",
+    countries: [
+      { name: "인도네시아", emoji: "🇮🇩", cities: ["발리", "우붓", "누사페니다", "길리"] },
+      { name: "태국", emoji: "🇹🇭", cities: ["방콕", "푸켓", "끄라비", "치앙마이"] },
+      { name: "베트남", emoji: "🇻🇳", cities: ["다낭", "호이안", "나트랑", "푸꾸옥"] },
+      { name: "싱가포르", emoji: "🇸🇬", cities: ["마리나베이", "센토사", "차이나타운"] },
+      { name: "말레이시아", emoji: "🇲🇾", cities: ["코타키나발루", "쿠알라룸푸르", "랑카위"] },
+    ],
+  },
+  "🗾 일본·오키나와": {
+    honeymoonCourse: "도쿄, 교토, 오키나와처럼 도시와 휴양을 섞어 많이 가요!",
+    countryAdvice: "1주면 2도시, 2주면 본토와 오키나와를 함께 넣기 좋아요.",
+    countries: [
+      { name: "일본", emoji: "🇯🇵", cities: ["도쿄", "교토", "오사카", "삿포로", "후쿠오카"] },
+      { name: "오키나와", emoji: "🏝️", cities: ["나하", "온나손", "차탄", "미야코지마"] },
+      { name: "홋카이도", emoji: "❄️", cities: ["오타루", "후라노", "비에이"] },
+    ],
+  },
+  "🏝 몰디브·하와이": {
+    honeymoonCourse: "몰디브 수상빌라나 하와이 섬 호핑 코스를 많이 선택해요!",
+    countryAdvice: "휴양형 지역이라 1개 지역 집중 또는 2개 섬 조합이 가장 만족도가 높아요.",
+    countries: [
+      { name: "몰디브", emoji: "🇲🇻", cities: ["말레", "마푸시", "바아환초", "아리환초"] },
+      { name: "하와이", emoji: "🇺🇸", cities: ["호놀룰루", "마우이", "카우아이", "빅아일랜드"] },
+      { name: "보라카이", emoji: "🇵🇭", cities: ["화이트비치", "불라복", "디니위드"] },
+    ],
+  },
+  "🗽 미주": {
+    honeymoonCourse: "뉴욕과 칸쿤, 또는 LA와 하와이 연계 코스가 많아요!",
+    countryAdvice: "거리 이동이 길어서 1주면 1~2개국, 2주면 3개 도시 이상도 가능합니다.",
+    countries: [
+      { name: "미국", emoji: "🇺🇸", cities: ["뉴욕", "LA", "샌프란시스코", "라스베이거스"] },
+      { name: "멕시코", emoji: "🇲🇽", cities: ["칸쿤", "툴룸", "멕시코시티", "플라야 델 카르멘"] },
+      { name: "캐나다", emoji: "🇨🇦", cities: ["밴쿠버", "퀘벡", "토론토", "밴프"] },
+      { name: "페루", emoji: "🇵🇪", cities: ["리마", "쿠스코", "마추픽추"] },
+    ],
+  },
+};
+
 export const tripResults: Record<string, TripResult> = {
   "🇪🇺 유럽": {
     destination: "파리 · 스위스",
@@ -380,4 +445,19 @@ export const tripResults: Record<string, TripResult> = {
 
 export function getResultForRegion(region: string): TripResult {
   return tripResults[region] || tripResults["🇪🇺 유럽"];
+}
+
+export function getCountriesForRegion(region: string): CountryOption[] {
+  return regionOptions[region]?.countries || regionOptions["🇪🇺 유럽"].countries;
+}
+
+export function getRegionMeta(region: string): RegionOption {
+  return regionOptions[region] || regionOptions["🇪🇺 유럽"];
+}
+
+export function getRecommendedCountryRange(days: number): string {
+  if (days <= 6) return "추천: 1~2개 나라";
+  if (days <= 10) return "추천: 2~3개 나라";
+  if (days <= 15) return "추천: 3~4개 나라";
+  return "추천: 4개 이상도 가능";
 }
