@@ -3,8 +3,10 @@ import React, { createContext, useContext, useState } from "react";
 export interface TripAnswers {
   budget: string;
   duration: string;
+  customDuration: string;
   mood: string;
   region: string;
+  customRegion: string;
 }
 
 interface TripContextType {
@@ -18,8 +20,10 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [answers, setAnswers] = useState<TripAnswers>({
     budget: "",
     duration: "",
+    customDuration: "",
     mood: "",
     region: "",
+    customRegion: "",
   });
 
   return (
