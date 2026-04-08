@@ -1,26 +1,39 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { tripResults } from "@/data/tripResults";
+import { useTrip } from "@/context/TripContext";
+import { getResultForRegion } from "@/data/tripResults";
 import ShareSheet from "@/components/ShareSheet";
-
-const data = tripResults.default;
 
 const ResultsPage = () => {
   const navigate = useNavigate();
+  const { answers } = useTrip();
   const [showShare, setShowShare] = useState(false);
   const [selectedDay, setSelectedDay] = useState(0);
   const [mapError, setMapError] = useState(false);
+
+  const data = getResultForRegion(answers.region);
+
+  // Show custom info if user typed custom values
+  const displayDuration = answers.customDuration || data.duration;
+  const displayRegion = answers.customRegion ? `${answers.customRegion} 여행` : null;
 
   return (
     <div className="mobile-container min-h-screen pb-32 bg-background">
       {/* Section A — Summary Card */}
       <div className="mx-4 mt-6 p-6 rounded-3xl bg-primary/10 border border-primary/20">
         <div className="text-3xl mb-2">{data.flag}</div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">{data.destination}</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">
+          {displayRegion || data.destination}
+        </h1>
         <div className="flex gap-4 text-sm text-muted-foreground">
-          <span>📅 {data.duration}</span>
+          <span>📅 {displayDuration}</span>
           <span>💰 {data.budget}</span>
         </div>
+        {answers.customRegion && (
+          <p className="text-xs text-muted-foreground mt-2">
+            * &quot;{answers.customRegion}&quot; 기준 추천 일정입니다
+          </p>
+        )}
       </div>
 
       {/* Section B — Info Chips */}
@@ -56,7 +69,6 @@ const ResultsPage = () => {
             />
           </div>
         )}
-        {/* Day chips */}
         <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
           {data.days.map((d, i) => (
             <button

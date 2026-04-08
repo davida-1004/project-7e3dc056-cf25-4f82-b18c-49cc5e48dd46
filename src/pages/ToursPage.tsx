@@ -1,15 +1,15 @@
 import { useNavigate } from "react-router-dom";
-import { tripResults } from "@/data/tripResults";
+import { useTrip } from "@/context/TripContext";
+import { getResultForRegion } from "@/data/tripResults";
 import { ChevronLeft } from "lucide-react";
-
-const data = tripResults.default;
 
 const ToursPage = () => {
   const navigate = useNavigate();
+  const { answers } = useTrip();
+  const data = getResultForRegion(answers.region);
 
   return (
     <div className="mobile-container min-h-screen pb-8 bg-background">
-      {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-6 pb-4">
         <button onClick={() => navigate("/results")} className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center">
           <ChevronLeft className="w-6 h-6" />
@@ -17,7 +17,6 @@ const ToursPage = () => {
         <h1 className="text-xl font-bold">🎒 현지 인기 투어</h1>
       </div>
 
-      {/* Tour Cards */}
       <div className="px-4 space-y-4">
         {data.tours.map((tour, i) => (
           <div key={i} className="bg-card border border-border rounded-2xl p-5">
