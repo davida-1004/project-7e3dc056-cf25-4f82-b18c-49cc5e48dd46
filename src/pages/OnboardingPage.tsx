@@ -133,8 +133,12 @@ const OnboardingPage = () => {
 
     const parsed = Number(sanitized);
     if (!Number.isFinite(parsed) || parsed === 0) return;
-
-    handleBudgetChange(parsed);
+    setAnswers((prev) => ({
+      ...prev,
+      budget: formatBudget(parsed),
+      customBudget: formatBudget(parsed),
+      budgetAmount: parsed,
+    }));
   };
 
   const handleDurationChange = (days: number) => {
@@ -330,7 +334,7 @@ const OnboardingPage = () => {
                 min={MIN_BUDGET}
                 max={MAX_BUDGET}
                 step={50}
-                value={budgetAmount > 0 ? budgetAmount : 500}
+                value={Math.min(Math.max(budgetAmount || MIN_BUDGET, MIN_BUDGET), MAX_BUDGET)}
                 onChange={(e) => handleBudgetChange(Number(e.target.value))}
                 className="w-full accent-primary"
               />
